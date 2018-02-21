@@ -1,0 +1,321 @@
+-- https://github.com/tidalcycles/Tidal/blob/master/tutorial/tutorial.md
+-- https://github.com/tidalcycles/tidal-workshop
+-- https://tidalcycles.org
+-- ////////// TIDAL Workshop
+
+
+-- tidalcycles (tidal)
+tidal is a DSL for creating music that focuses on the creation and
+manipulation of patterns. Tidal combines with SuperCollider and SuperDirt and
+is embedded in Haskell.
+You can use a variety of text editors - atom, sublimetext, emacs, and vim. We
+will be using atom
+SuperCollider - programming language for real-time audio synthesis and algorithmic composition
+SuperDirt - engine/synthesizer that bridges SuperCollider and Tidal
+
+If you have installed SuperCollider and Tidal from here:
+https://tidalcycles.org/getting_started.html
+Ill briefly cover starting the programs. If you have not installed Tidal/SuperCollider
+
+
+-- GOALS
+I. start and stop sound
+II. make patterns
+III. transform patterns
+IV. add effects
+V. folders and sample collection variation
+VI. iterating through samples
+VII. layering
+VIII. more pattern transforms
+IX. more effects
+X. striate and spread
+
+
+
+-- I. start and stop sounds
+1. in SuperCollider start SuperDirt
+
+SuperDirt.start;
+
+shift+enter to execute line - your cursor must be on the line
+
+2. Open Atom text editor
+boot tidal cycles and create new file and save it with the .tidal extension
+3. the "hello world" of tidal
+
+d1 $ sound "bd"
+
+4. shift+enter to execute a line of code
+-- in tidal (and similar programming languages (SuperCollider ) - we execute a
+-- line or block of code - thus, we have text on the page that is code and other
+-- that is not )
+-- everything after the double hyphen is a comment
+
+d1 silence
+hush
+
+5. to stop the code:
+
+-- d1 is a function that takes a pattern as input, and sends it to SuperDirt
+-- -- think of it like a track.
+-- everything to the right of the $ will be evaluated first
+-- $ is an alternative to parentheses, means “evaluate everything on the right first” --
+-- By default there are ten of them defined
+-- sound - indicates that we are making patterns with audio samples
+-- bd is a folder of samples and the first sample is being played
+
+
+
+
+d1 silence
+-- (silences only d1)
+
+hush
+-- (silences all connections)
+
+II. Make patterns
+hush
+
+cps (90/120)
+-- tidal is based on a cycle - adding more samples divides this cycle
+d1 $ sound "bd bd bd bd"
+-- 4 samples equally dividing the duration of the loop - 1/4 per sample
+d1 $ sound "bd bd hh bd cp hh"
+-- tilda ~ is used for creating a rest/silence
+d1 $ sound "bd ~ hh bd cp ~"
+-- use square brackets [...] with commas , to play samples simultaneously
+d1 $ sound "[bd cp bd bd, hh hh hh]"
+-- nested polyrhythm
+d1 $ sound "[bd [sn sn], ul [hh hh hh]]"
+-- using the square brackets to subdivide a beat
+d1 $ sound "[bd/2 [sn sn], [odx*3] [hh hh hh]]"
+-- what are the /2 and *3 doing?
+d1 $ sound "[bd/2 [sn sn]*2, [odx*3] [hh hh hh]]/2"
+
+-- ///// Try out nesting more rhythmic structures
+
+
+hush
+
+
+d1 $ sound "bd bd:1 bd:2 bd:3"
+-- choose different samples from folder - bd is a folder bd is the same of bd:0
+
+d1 $ n "0 2 7 4" # sound "ul"
+-- notice the # - more on this later
+-- n allows for us to choose the sample number from the folder ul (in this case)
+-- the pattern on the left determines rhythmic structure
+
+III. transform patterns with function
+hush
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]"
+
+d1 $ slow 2 $ sound "[bd sn:2, hh*3 hh:3*2]"
+d1 $ fast 2 $ sound "[bd sn:2, hh*3 hh:3*2]"
+d1 $ every 4 (fast 2) $ sound "[bd sn:2, hh*3 hh:3*2]"
+d1 $ every 4 (fast 2) $ sound "bd [~ sn]"
+
+
+IV. adding effects (gain, pan, vowel, speed )
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]" # gain "0.8 "
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]" # gain "1 0.5 0.42 1"
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]" # pan "0 0.25 0.75 1"
+-- pan is between 0 and 1
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]" # vowel "a e i o u"
+d1 $ sound "[bd sn:2, hh*3 hh:3*2]" # speed "2 0.25 0.75 1"
+
+-- try combining all of the above
+-- try to create textures -
+
+V. FOLDERS
+In SuperCollider run this line of code to open the folder where the samples are
+
+Quarks.openFolder;
+hush
+-- // short sample collections
+-- // variations on a sound (bd,sn,ht, usually percussion)
+-- // sample kit within a folder (odx, drums, auto, ul)
+-- // phrase chopped up (tabla,  amencutup)
+-- // scale (arpy, latibro, metal)
+-- // long samples (koy sax ade alex alone bev pad)
+
+-- run
+-- run and irand and shifting sample number ranges
+
+VI. iterating through samples
+
+d1 $ slow 2 $ sound "ul ul:1 ul:2 ul:3 ul:4 ul:5 ul:6"
+d1 $ slow 2 $ n "[0 1 2 3 4 5 6]" # sound "ul"
+d1 $ slow 2 $ n "[0..6]" # sound "ul"
+
+-- run
+d1 $ n (run 8) # sound "bd"
+d1 $ n (run 7) # sound "odx"
+d1 $ slow 4 $ n (run 32) # sound "amencutup"
+
+d1 $ n (irand 4) # sound "amencutup"
+d1 $ slow 4 $ n (irand 32) # sound "amencutup"
+
+-- shift the range, requires
+-- <$> A synonym for fmap, useful for mapping numerical functions so they work on patterns.
+
+d1 $ n (run 8) # sound "amencutup"
+d1 $ n ((+4) <$> run 8) # sound "amencutup"
+
+-- another way of implementing run and irand
+-- here the *8 determines the rhythmic structure
+
+d1 $ sound (samples "arpy*8" $ irand 14)
+d1 $ sound (samples "[metal*8, bd]" $ slow 2 $ run 17)
+
+
+-- longsamples
+hush
+-- using loopAt to fit the sample into a given number of cycles
+d1 $ loopAt 8 $ sound "bev"
+-- using chop to chop sample into pieces
+d1 $ slow 8 $ chop 128 $ sound "bev"
+-- now we can reverse the order of the "chopped" sections
+d1 $ slow 8 $ rev $ chop 128 $ sound "bev"
+-- * Explore more sounds:
+
+-- flick sid can metal future gabba sn mouth co gretsch mt arp h cp cr
+-- newnotes bass hc tabla bass0 hh bass1 bass2 oc bass3 ho odx
+-- diphone2 house off ht tink perc bd industrial pluck trump
+-- printshort jazz voodoo birds3 procshort blip drum jvbass psr wobble
+-- drumtraks koy rave bottle kurt latibro rm sax lighter lt arpy feel
+-- less stab ul
+VII. layering
+
+-- using multiple tidal "tracks"
+d1 $ sound "bd sn"
+d2 $ sound "hh*4"
+
+hush
+
+-- using []
+d1 $ sound "[bd sn:2, hh:3*4]"
+
+d1 $ sound "[bd sn:2, hh:3*4]" # speed "[1,0.75 0.5]"
+
+
+-- using stack
+
+d1 $ stack[
+sound "bd bd sn bd cp ul*2",
+sound "hh*6"
+]
+
+d1 $  sound "bd bd sn bd cp ul*2"
+# stack[
+up "0 1 2 3 4 5",
+up "0 -1 -2 -3 -4 -5"
+]
+
+
+-- stack lets us apply effects to each sound pattern as well as all sound PATTERNS
+
+d1 $ every 3 ((slow 1.5).(degradeBy 0.3).(chop 124)) $ stack[
+every 7 (# speed "2") $ sound "bd bd sn bd cp ul*2" # vowel "a e i o",
+every 4 (fast 2) $ sound "hh*6" # speed "[1 2 0.5 0.25]"
+] |+| room "0.1"
+
+-- above shows how to chain transforms and effects together
+
+VIII. more pattern transforms
+
+-- degrade ? and degradeBy   /// random on/off
+d1 $ sound (samples "[metal*8, bd]" $ slow 2 $ run 17)
+-- degrade by 50% default
+d1 $ degrade $ sound (samples "[metal*8, bd]" $ slow 2 $ run 17)
+-- same as ?
+d1 $ sound (samples "[metal*8, bd]?" $ slow 2 $ run 17)
+-- choosing a precise ratio - float between 0-1
+d1 $ degradeBy 0.1 $ sound (samples "[arpy*8, bd]" $ slow 2 $ run 13)
+
+-- iter
+d1 $ iter 4 $ sound "bd cp sn:1 hh"
+
+-- rev
+d1 $ rev $ sound "bd cp sn:1 hh"
+
+-- palindrome
+d1 $ palindrome $ sound "bd cp sn:1 hh"
+
+-- beat shifting
+d1 $ every 4 (0.25 ~>) $ sound "bd cp sn:1 hh"
+
+IX. more effects
+-- frequency based effects
+-- lowpass filter
+d1 $ sound "bass*8" # speed (run 8) # cutoff "1000"
+
+-- highpass filter
+d1 $ sound "bass*8" # speed (run 8) # hcutoff "1000"
+
+-- time based effects
+-- reverberation  0-1
+d1 $ sound "bass*8" # speed (run 8) # hcutoff "1000" # room "0.2"
+
+-- delay
+-- cmd+enter to execute code over multiple lines
+d1 $ degradeBy 0.3 $ sound "bass*8"
+# speed (run 8) # cutoff "1000"
+# delay "0.9" -- amplitude
+# delayfeedback "0.91" -- feedback amount
+# delaytime "0.125" -- delay time
+
+-- distortion based effect
+-- crush: bit crushing, a pattern of numbers from 1 for drastic reduction
+-- in bit-depth to 16 for barely no reduction.
+
+d1 $ n (run 8) # sound "arpy" # crush "16 8 4 2"
+
+
+-- up: is similar to speed yet works in semitones
+d1 $ sound "bd*8" # up "0 7 5 -3 -10 -12 12 -7"
+
+
+X. striate and spread
+-- striate
+d1 $ slow 2 $ striate 4 $ sound "bd cp bd sn"
+
+-- This plays the loop the given number of times, but triggering progressive portions
+-- of each sample. So in this case it plays the loop four times, the first time
+-- playing the first quater of each sample, then the second time playing the second
+-- quater of each sample, etc.. In the above example it
+-- sounds a bit like reverb, but it isn't really.
+
+
+-- long sample
+d1 $ slow 4 $ sound "alone"
+d1 $ slow 32 $ striate 164 $ sound "alone"
+
+-- striate'
+
+d1 $ iter 4 $ n "[0..7]" # sound "arpy"
+d1 $ iter 4 $ striate' 4 0.25 $ n "[0..7]" # sound "arpy"
+-- try slowing it down
+
+
+-- spread
+
+-- The spread function allows you to take a pattern transformation which takes
+-- a parameter, such as slow, and provide several parameters which are switched
+-- between. In other words it ‘spreads’ a function across several values.
+
+
+d1 $ sound "bd bd:2 cp bd ul hc"
+d1 $ slow 2 $ sound "bd bd:2 cp bd ul hc"
+d1 $ slow (4/3) $ sound "bd bd:2 cp bd ul hc"
+d1 $ spread slow [2,4/3] $ sound "bd bd:2 cp bd ul hc"
+
+-- There is a nice trick you can use here – if you pass ($) as the function to
+-- spread values over, you can put functions in the list instead of values.
+
+d1 $ spread ($) [fast 2, rev, slow 2, striate 3, (# speed "0.8")]
+    $ sound "[bd*2 [~ bd]] [sn future]*2 cp jvbass*4"
+
+d1 $ slow "<2 3 4>" $ sound "bd bd:2 cp bd ul hc"
+
+d1 $ slow "<2 3, 4>" $ sound "bd bd:2 cp bd ul hc"
